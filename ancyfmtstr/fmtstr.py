@@ -53,6 +53,7 @@ def fmtstr_payload(offset, writes, numbwritten=0, write_size='byte'):
 
     payload = ""
     blank_chars = 0
+    write_addr_seq = []
     print(sorted(splitted_writes.items(), key=operator.itemgetter(1)))
     for where, what in sorted(splitted_writes.items(), key=operator.itemgetter(1)):
         need_write_chars = what - numbwritten
@@ -60,6 +61,7 @@ def fmtstr_payload(offset, writes, numbwritten=0, write_size='byte'):
         payload += "%{}$" + formatz + "n"
         numbwritten += need_write_chars
         blank_chars += 2
+        write_addr_seq.append(where)
 
     if len(payload) < 8:
         payload = payload.ljust(8, 'a')
@@ -94,7 +96,7 @@ def fmtstr_payload(offset, writes, numbwritten=0, write_size='byte'):
         write_indexes.append(i)
     payload = payload.format(*write_indexes)
 
-    for where, _ in splitted_writes.items():
+    for where in write_addr_seq:
         payload += p64(where) if context.bits == 64 else p32(where)
 
     return payload
