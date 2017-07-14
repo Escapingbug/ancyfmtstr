@@ -53,11 +53,12 @@ def fmtstr_payload(offset, writes, numbwritten=0, write_size='byte'):
 
     payload = ""
     blank_chars = 0
+    print(sorted(splitted_writes.items(), key=operator.itemgetter(1)))
     for where, what in sorted(splitted_writes.items(), key=operator.itemgetter(1)):
         need_write_chars = what - numbwritten
         payload += "%{}c".format(need_write_chars)
         payload += "%{}" + formatz + "n"
-        numbwritten += what
+        numbwritten += need_write_chars
         blank_chars += 2
 
     if len(payload) < 8:
