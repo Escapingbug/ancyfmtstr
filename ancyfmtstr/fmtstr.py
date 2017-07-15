@@ -53,8 +53,8 @@ def fmtstr_payload(offset, writes, numbwritten=0, write_size='short'):
     splitted_writes = {}
     for where, what in writes.items():
         splitted_writes.update(_split_write(what, where, mask, decalage, step))
-    for where, what in splitted_writes.items():
-        print("write {} at {}".format(hex(what[0]), hex(where)))
+    #for where, what in splitted_writes.items():
+    #    print("write {} at {}".format(hex(what[0]), hex(where)))
 
     def _get_formatz(size):
         if size == 1:
