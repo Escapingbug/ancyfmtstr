@@ -31,18 +31,18 @@ def fmtstr_payload(offset, writes, numbwritten=0, write_size='byte'):
     number, step, mask, decalage = config[context.bits][write_size]
 
     def _split_write(what, where, mask, decalage, step):
-        # I firstly thought the number to write is signed, so I have to split up when it is overflowed
-        # But! It's wrong.
-        #write_value_limit = (1 << (decalage - 1)) - 1 if mask != 0xff else 0xff
+        # I don't know exactly why I need this, is it signed value?
+        # I failed to write things when I deleted this at some strange point.
+        write_value_limit = (1 << (decalage - 1)) - 1 if mask != 0xff else 0xff
         value = what & mask
         this_where = where
         this_writes = {}
         while True:
-            #if value >= write_value_limit:
-            #    values = _split_write(value, this_where, mask >> 8, decalage >> 1, step >> 1)
-            #    this_writes.update(values)
-            #else:
-            #    this_writes[this_where] = (value, step)
+            if value >= write_value_limit:
+                values = _split_write(value, this_where, mask >> 8, decalage >> 1, step >> 1)
+                this_writes.update(values)
+            else:
+                this_writes[this_where] = (value, step)
             this_writes[this_where] = (value, step)
             what >>= decalage
             value = what & mask
