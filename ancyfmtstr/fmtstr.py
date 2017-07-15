@@ -14,55 +14,46 @@ def fmtstr_payload(offset, writes, numbwritten=0, write_size='byte'):
     # 'byte' : (number, step, mask, format, decalage)
     config = {
         32: {
-            'byte': (4, 1, 0xff, 'hh', 8),
-            'short': (2, 2, 0xffff, 'h', 16),
-            'int': (1, 4, 0xffffffff, '', 32),
+            'byte': (4, 1, 0xff, 8),
+            'short': (2, 2, 0xffff, 16),
+            'int': (1, 4, 0xffffffff, 32),
         },
         64: {
-            'byte': (8, 1, 0xff, 'hh', 8),
-            'short': (4, 2, 0xffff, 'h', 16),
-            'int': (2, 4, 0xffffffff, '', 32)
+            'byte': (8, 1, 0xff, 8),
+            'short': (4, 2, 0xffff, 16),
+            'int': (2, 4, 0xffffffff, 32)
         }
     }
 
     if write_size not in ['byte', 'short', 'int']:
         log.error("write_size must be 'byte', 'short' or 'int'")
 
-    number, step, mask, formatz, decalage = config[context.bits][write_size]
-
-    to_write = {}
+    number, step, mask, decalage = config[context.bits][write_size]
 
     def _split_write(what, where, mask, decalage, step):
-        # I found out that the writing is to be signed int, we only use the positive part of that.
-        # So we have to consider the overflow kinda thing.
-        write_value_limit = (1 << (decalage - 1)) - 1 if mask != 0xff else 0xff
+        # I firstly thought the number to write is signed, so I have to split up when it is overflowed
+        # But! It's wrong.
+        #write_value_limit = (1 << (decalage - 1)) - 1 if mask != 0xff else 0xff
         value = what & mask
-        left_value = what >> decalage
         this_where = where
         this_writes = {}
         while True:
-            if value >= write_value_limit:
-                values = _split_write(value, this_where, mask >> 8, decalage >> 1, step >> 1)
-                this_writes.update(values)
-            else:
-                this_writes[this_where] = (value, step)
+            #if value >= write_value_limit:
+            #    values = _split_write(value, this_where, mask >> 8, decalage >> 1, step >> 1)
+            #    this_writes.update(values)
+            #else:
+            #    this_writes[this_where] = (value, step)
+            this_writes[this_where] = (value, step)
             what >>= decalage
             value = what & mask
-            left_value = what
             this_where += step
-            if not left_value:
+            if not what:
                 break
-        print(this_writes)
         return this_writes
 
     splitted_writes = {}
-    print(writes.items())
     for where, what in writes.items():
-        print("write {} at {} splitted as {}".format(hex(what), hex(where), _split_write(what, where, mask, decalage, step)))
         splitted_writes.update(_split_write(what, where, mask, decalage, step))
-    print("splitted writes")
-    for where, what in splitted_writes.items():
-        print(hex(where), hex(what[0]), hex(what[1]))
 
     def _get_formatz(size):
         if size == 1:
@@ -77,7 +68,6 @@ def fmtstr_payload(offset, writes, numbwritten=0, write_size='byte'):
     payload = ""
     blank_chars = 0
     write_addr_seq = []
-    #print(sorted(splitted_writes.items(), key=operator.itemgetter(1)))
     for where, what_thing in sorted(splitted_writes.items(), key=lambda x: x[1][0]):
         what = what_thing[0]
         what_size = what_thing[1]
@@ -106,12 +96,9 @@ def fmtstr_payload(offset, writes, numbwritten=0, write_size='byte'):
         index_end = offset + (now_filled_len / addr_size) + len(splitted_writes)
         for i in range(index_start, index_end):
             real_index_in_chars += len(str(i))
-        print("real index in chars {}".format(real_index_in_chars))
         buf_written += real_index_in_chars - blank_chars
         blank_chars = real_index_in_chars
-        print("now buf {}".format(buf_written))
         now_filled_len = ((buf_written - 1) & ~(addr_size - 1)) + addr_size
-        print("now filled len {}".format(now_filled_len))
         if now_filled_len == filled_len:
             ok = True
         filled_len = now_filled_len
