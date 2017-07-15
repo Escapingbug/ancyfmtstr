@@ -9,7 +9,7 @@ import operator
 log = getLogger(__name__)
 
 
-def fmtstr_payload(offset, writes, numbwritten=0, write_size='byte'):
+def fmtstr_payload(offset, writes, numbwritten=0, write_size='short'):
 
     # 'byte' : (number, step, mask, format, decalage)
     config = {
@@ -43,7 +43,6 @@ def fmtstr_payload(offset, writes, numbwritten=0, write_size='byte'):
                 this_writes.update(values)
             else:
                 this_writes[this_where] = (value, step)
-            this_writes[this_where] = (value, step)
             what >>= decalage
             value = what & mask
             this_where += step
@@ -54,6 +53,8 @@ def fmtstr_payload(offset, writes, numbwritten=0, write_size='byte'):
     splitted_writes = {}
     for where, what in writes.items():
         splitted_writes.update(_split_write(what, where, mask, decalage, step))
+    for where, what in splitted_writes.items():
+        print("write {} at {}".format(hex(what[0]), hex(where)))
 
     def _get_formatz(size):
         if size == 1:

