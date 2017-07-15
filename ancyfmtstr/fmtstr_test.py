@@ -30,6 +30,7 @@ def main():
         print(map(hex, i))
     payload = fmtstr_payload(offset=6, writes = writes, write_size='short')
     print(hexdump(payload))
+    print("payload len {}".format(len(payload)))
 
 if __name__ == "__main__":
     main()

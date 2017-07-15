@@ -40,7 +40,7 @@ def fmtstr_payload(offset, writes, numbwritten=0, write_size='byte'):
         left_value = what >> decalage
         this_where = where
         this_writes = {}
-        while left_value:
+        while True:
             if value >= write_value_limit:
                 values = _split_write(value, this_where, mask >> 8, decalage >> 1, step >> 1)
                 this_writes.update(values)
@@ -50,14 +50,15 @@ def fmtstr_payload(offset, writes, numbwritten=0, write_size='byte'):
             value = what & mask
             left_value = what
             this_where += step
+            if not left_value:
+                break
         print(this_writes)
         return this_writes
 
     splitted_writes = {}
     print(writes.items())
     for where, what in writes.items():
-        if where == 0x6cb308:
-            print("splitting:" + str(_split_write(what, where, mask, decalage, step)))
+        print("write {} at {} splitted as {}".format(hex(what), hex(where), _split_write(what, where, mask, decalage, step)))
         splitted_writes.update(_split_write(what, where, mask, decalage, step))
     print("splitted writes")
     for where, what in splitted_writes.items():
